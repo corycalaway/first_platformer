@@ -1,10 +1,12 @@
-import pygame, sys
+import pygame, sys, os, random
 
 clock = pygame.time.Clock()
 
 from pygame.locals import *
+pygame.mixer.pre_init(44100, -16, 2, 512)
 
 pygame.init() # initiate pygame
+pygame.mixer.set_num_channels(69)
 
 pygame.display.set_caption('My Pygame Window')
 
@@ -21,6 +23,13 @@ display = pygame.Surface((600,400))
 grass_image = pygame.image.load('grass.png')
 TILE_SIZE = grass_image.get_width()
 grass2_image = pygame.image.load('grass2.png')
+
+jump_sound = pygame.mixer.Sound('jump.wav')
+grass_sounds = [pygame.mixer.Sound('grass_0.wav'), pygame.mixer.Sound('grass_1.wav')]
+grass_sounds[0].set_volume(0.5)
+pygame.mixer.music.load('music.wav')
+pygame.mixer.music.play(-1)
+
 
 # movement
 moving_right = False
@@ -82,7 +91,7 @@ player_action = 'idle'
 player_frame = 0
 player_flip = False
 
-
+grass_sound_timer = 0
 
 
 
@@ -130,6 +139,10 @@ test_rect = pygame.Rect(100,100,100,50)
 
 while True: # game loop
     display.fill((146,244,255))
+
+    if grass_sound_timer > 0:
+        grass_sound_timer -= 1
+
 
     # Auto scroll
     # scroll[0] += 1
@@ -192,6 +205,12 @@ while True: # game loop
     if collisions['bottom']:
         player_y_momentum = 0
         air_timer = 0
+        if player_movement[0] !=0:
+            if grass_sound_timer == 0:
+                grass_sound_timer = 30
+                random.choice(grass_sounds).play()
+
+
     else:
         air_timer += 1
 
@@ -256,6 +275,9 @@ while True: # game loop
         if event.type == KEYDOWN:
             print('key down')
 
+            if event.key == K_w:
+                pygame.mixer.music.fadeout(1000)
+
             if event.key == K_RIGHT:
                 moving_right = True
 
@@ -264,6 +286,7 @@ while True: # game loop
 
             if event.key == K_UP:
                 if air_timer < 100:
+                    jump_sound.play()
                     player_y_momentum = -5
 
 
