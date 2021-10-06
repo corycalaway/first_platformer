@@ -14,8 +14,10 @@ screen = pygame.display.set_mode(WINDOW_SIZE,0,32) # initiate window
 
 display = pygame.Surface((600,400))
 
-player_image1 = pygame.image.load('knight.png')
-# player_image2 = pygame.image.load('dagger.png')
+# player_image = pygame.image.load('player_animations/run/run_0.png')
+
+
+
 grass_image = pygame.image.load('grass.png')
 TILE_SIZE = grass_image.get_width()
 grass2_image = pygame.image.load('grass2.png')
@@ -42,6 +44,47 @@ def load_map(path):
     for row in data:
         game_map.append(list(row))
     return game_map
+
+global animation_frames
+animation_frames = {}
+
+def load_animation(path, frame_durations):
+    global animation_frames
+    animation_name = path.split('/') [-1]
+    animation_frame_data = []
+    n = 0
+    for frame in frame_durations:
+        animation_frame_id = animation_name + '_' + str(n)
+        img_loc = path + '/' + animation_frame_id + '.png'
+        print(img_loc)
+        animation_image = pygame.image.load(img_loc)
+        # animation_image.set_colorkey((255,255,255))
+        animation_frames[animation_frame_id] = animation_image.copy()
+        for i in range(frame):
+            animation_frame_data.append(animation_frame_id)
+        n += 1
+    return animation_frame_data
+
+def change_action(action_var, frame, new_value):
+    if action_var != new_value:
+        action_var = new_value
+        frame = 0
+    return action_var,frame
+
+# print(load_animation('player_animations/run',[7,7]))
+
+animation_database = {}
+
+animation_database['run'] = load_animation('player_animations/run', [7,7])
+animation_database['idle'] = load_animation('player_animations/idle',[7,7])
+
+player_action = 'idle'
+player_frame = 0
+player_flip = False
+
+
+
+
 
 game_map = load_map('map')
 
@@ -82,7 +125,7 @@ def move(rect, movement, tiles):
 
 
 
-player_rect = pygame.Rect(50, 50, player_image1.get_width(), player_image1.get_height()) # player hitbox/collision
+player_rect = pygame.Rect(50, 50, 25,25) # player hitbox/collision
 test_rect = pygame.Rect(100,100,100,50)
 
 while True: # game loop
@@ -133,6 +176,17 @@ while True: # game loop
     if player_y_momentum > 3:
         player_y_momentum = 3
 
+    if player_movement[0] > 0:
+        player_action,player_frame = change_action(player_action,player_frame,'run')
+        player_flip = False
+
+    if player_movement[0] == 0:
+        player_action, player_frame = change_action(player_action, player_frame, 'idle')
+
+    if player_movement[0] < 0:
+        player_action,player_frame = change_action(player_action,player_frame,'run')
+        player_flip = True
+
     player_rect, collisions = move(player_rect, player_movement, tile_rects)
 
     if collisions['bottom']:
@@ -141,7 +195,16 @@ while True: # game loop
     else:
         air_timer += 1
 
-    display.blit(player_image1, (player_rect.x - scroll[0], player_rect.y - scroll[1]))
+    # Cycles through animation images for player
+    player_frame += 1
+    if player_frame >= len(animation_database[player_action]):
+        player_frame = 0
+    # Checks for frame in animation database
+    player_img_id = animation_database[player_action][player_frame]
+    player_img = animation_frames[player_img_id]
+    print(player_img_id)
+
+    display.blit(pygame.transform.flip(player_img,player_flip,False), (player_rect.x - scroll[0], player_rect.y - scroll[1]))
 
     # Bouncing
     # if player_location[1] > WINDOW_SIZE[1]-player_image1.get_height():
@@ -222,4 +285,6 @@ while True: # game loop
 # <div>Icons made by <a href="https://www.freepik.com" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
 # <div>Icons made by <a href="https://www.freepik.com" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
 # <div>Icons made by <a href="https://www.freepik.com" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
+# <div>Icons made by <a href="https://www.freepik.com" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
+# <div>Icons made by <a href="https://www.flaticon.com/authors/smashicons" title="Smashicons">Smashicons</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
 # <div>Icons made by <a href="https://www.freepik.com" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
